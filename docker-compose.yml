@@ -19,6 +19,7 @@ services:
     depends_on:
       - stats-db
     environment:
+      SPRING_PROFILES_ACTIVE: main
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
       SPRING_DATASOURCE_USERNAME: stats_user
       SPRING_DATASOURCE_PASSWORD: stats_password
@@ -29,7 +30,7 @@ services:
 
   main-service-db:
     image: postgres:16.1
-    container_name: ewm-db
+    container_name: main-service-db
     restart: always
     environment:
       POSTGRES_DB: explore
@@ -42,12 +43,13 @@ services:
 
   main-service:
     build: ./main-service
-    container_name: ewm-service
+    container_name: main-service
     restart: always
     depends_on:
-      - ewm-db
+      - main-service-db
       - stats-server
     environment:
+      SPRING_PROFILES_ACTIVE: main
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/explore
       SPRING_DATASOURCE_USERNAME: explore_user
       SPRING_DATASOURCE_PASSWORD: explore_password
