@@ -9,7 +9,6 @@ import ru.practicum.server.stat.service.StatsService;
 import ru.practicum.stat.dto.ViewStatsDto;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -18,25 +17,19 @@ import java.util.List;
 public class StatsController {
 
     private final StatsService statsService;
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @PostMapping("/hit")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void saveHit(@RequestBody EndpointHitDto endpointHitDto) {
+    public ResponseEntity<Void> saveHit(@RequestBody EndpointHitDto endpointHitDto) {
         statsService.saveHit(endpointHitDto);
+        return ResponseEntity.status(201).build();
     }
 
     @GetMapping
     public ResponseEntity<List<ViewStatsDto>> getStats(
-            @RequestParam String start,
-            @RequestParam String end,
-            @RequestParam(required = false) List<String> uris,
-            @RequestParam(defaultValue = "false") boolean unique) {
-
-        LocalDateTime startDate = LocalDateTime.parse(start, FORMATTER);
-        LocalDateTime endDate = LocalDateTime.parse(end, FORMATTER);
-
-        List<ViewStatsDto> stats = statsService.getStats(startDate, endDate, uris, unique);
-        return ResponseEntity.ok(stats);
+            @RequestParam LocalDateTime start,
+            @RequestParam LocalDateTime end,
+            @RequestParam(required = false) List<String> uris
+    ) {
+        return ResponseEntity.ok(statsService.getStats(start, end, uris));
     }
 }
