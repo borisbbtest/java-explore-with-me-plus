@@ -1,4 +1,4 @@
-package ru.practicum.stat.model;
+package ru.practicum.server.stat.model;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,11 +7,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "endpoint_hits")
-@Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class EndpointHit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

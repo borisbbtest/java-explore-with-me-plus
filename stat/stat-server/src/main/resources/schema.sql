@@ -1,6 +1,4 @@
-
-
-CREATE TABLE IF NOT EXISTS endpoint_hits (
+CREATE TABLE IF NOT EXISTS endpoint_hits(
     id SERIAL PRIMARY KEY,
     app VARCHAR(255) NOT NULL,
     uri VARCHAR(500) NOT NULL,
