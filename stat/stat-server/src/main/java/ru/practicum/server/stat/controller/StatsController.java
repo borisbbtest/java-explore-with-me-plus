@@ -12,13 +12,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/stats")
+@RequestMapping("/hit")
 @RequiredArgsConstructor
 public class StatsController {
 
     private final StatsService statsService;
 
-    @PostMapping("/hit")
+    @PostMapping
     public ResponseEntity<Void> saveHit(@RequestBody EndpointHitDto endpointHitDto) {
         statsService.saveHit(endpointHitDto);
         return ResponseEntity.status(201).build();
