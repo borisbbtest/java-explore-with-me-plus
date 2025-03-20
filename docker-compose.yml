@@ -28,9 +28,9 @@ services:
     networks:
       - explore-network
 
-  main-service-db:
+  ewm-db:
     image: postgres:16.1
-    container_name: main-service-db
+    container_name: ewm-db
     restart: always
     environment:
       POSTGRES_DB: explore
@@ -41,16 +41,16 @@ services:
     networks:
       - explore-network
 
-  main-service:
+  ewm-service:
     build: ./main-service
-    container_name: main-service
+    container_name: ewm-service
     restart: always
     depends_on:
-      - main-service-db
+      - ewm-db
       - stats-server
     environment:
       SPRING_PROFILES_ACTIVE: main
-      SPRING_DATASOURCE_URL: jdbc:postgresql://main-service-db:5432/explore
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/explore
       SPRING_DATASOURCE_USERNAME: explore_user
       SPRING_DATASOURCE_PASSWORD: explore_password
       STATS_SERVER_URL: http://stats-server:9090
