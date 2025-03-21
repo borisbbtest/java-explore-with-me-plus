@@ -1,5 +1,6 @@
 package ru.practicum.stat.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,6 +23,7 @@ public class EndpointHitDto {
     @NotBlank(message = "IP address cannot be blank")
     private String ip;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @NotNull(message = "Timestamp cannot be null")
     private LocalDateTime timestamp;
 }

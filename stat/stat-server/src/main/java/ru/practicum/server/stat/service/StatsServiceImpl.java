@@ -26,7 +26,7 @@ public class StatsServiceImpl implements StatsService {
 
     @Transactional
     @Override
-    public void saveHit(EndpointHitDto endpointHitDto) {
+    public EndpointHitDto saveHit(EndpointHitDto endpointHitDto) {
         // Получаем приложение или создаем новое
         App app = appRepository.findByName(endpointHitDto.getApp())
                 .orElseGet(() -> appRepository.save(new App(null, endpointHitDto.getApp())));
@@ -37,7 +37,8 @@ public class StatsServiceImpl implements StatsService {
 
         // Преобразуем DTO в Entity и сохраняем
         EndpointHit hit = StatsMapper.toEntity(endpointHitDto, app, uri);
-        statsRepository.save(hit);
+        EndpointHit saved = statsRepository.save(hit);
+        return StatsMapper.toDto(saved);
     }
 
     @Override
