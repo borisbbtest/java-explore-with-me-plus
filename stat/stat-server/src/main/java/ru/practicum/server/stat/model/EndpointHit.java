@@ -2,6 +2,7 @@ package ru.practicum.server.stat.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
