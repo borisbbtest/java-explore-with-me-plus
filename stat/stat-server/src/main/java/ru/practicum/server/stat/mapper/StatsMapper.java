@@ -1,9 +1,9 @@
 package ru.practicum.server.stat.mapper;
 
 import ru.practicum.server.stat.model.App;
+import ru.practicum.server.stat.model.EndpointHit;
 import ru.practicum.server.stat.model.Uri;
 import ru.practicum.stat.dto.EndpointHitDto;
-import ru.practicum.server.stat.model.EndpointHit;
 
 public class StatsMapper {
 

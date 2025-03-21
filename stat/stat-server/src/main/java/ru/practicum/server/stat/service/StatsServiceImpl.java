@@ -5,13 +5,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.server.stat.mapper.StatsMapper;
 import ru.practicum.server.stat.model.App;
-import ru.practicum.server.stat.model.EndpointHit;
 import ru.practicum.server.stat.model.Uri;
 import ru.practicum.server.stat.repository.AppRepository;
+import ru.practicum.server.stat.repository.StatsRepository;
 import ru.practicum.server.stat.repository.UriRepository;
 import ru.practicum.stat.dto.EndpointHitDto;
 import ru.practicum.stat.dto.ViewStatsDto;
-import ru.practicum.server.stat.repository.StatsRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,17 +27,11 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public EndpointHitDto saveHit(EndpointHitDto endpointHitDto) {
         // Получаем приложение или создаем новое
-        App app = appRepository.findByName(endpointHitDto.getApp())
-                .orElseGet(() -> appRepository.save(new App(null, endpointHitDto.getApp())));
-
+        App app = getOrCreateApp(endpointHitDto);
         // Получаем URI или создаем новый
-        Uri uri = uriRepository.findByUri(endpointHitDto.getUri())
-                .orElseGet(() -> uriRepository.save(new Uri(null, endpointHitDto.getUri())));
-
+        Uri uri = getOrCreateUri(endpointHitDto);
         // Преобразуем DTO в Entity и сохраняем
-        EndpointHit hit = StatsMapper.toEntity(endpointHitDto, app, uri);
-        EndpointHit saved = statsRepository.save(hit);
-        return StatsMapper.toDto(saved);
+        return StatsMapper.toDto(statsRepository.save(StatsMapper.toEntity(endpointHitDto, app, uri)));
     }
 
     @Override
@@ -55,4 +48,13 @@ public class StatsServiceImpl implements StatsService {
         }
     }
 
+    private App getOrCreateApp(EndpointHitDto endpointHitDto) {
+        return appRepository.findByName(endpointHitDto.getApp())
+                .orElseGet(() -> appRepository.save(new App(null, endpointHitDto.getApp())));
+    }
+
+    private Uri getOrCreateUri(EndpointHitDto endpointHitDto) {
+        return uriRepository.findByUri(endpointHitDto.getUri())
+                .orElseGet(() -> uriRepository.save(new Uri(null, endpointHitDto.getUri())));
+    }
 }
