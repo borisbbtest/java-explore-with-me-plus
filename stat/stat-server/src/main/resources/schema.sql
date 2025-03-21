@@ -1,0 +1,19 @@
+CREATE TABLE apps (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE uris (
+    id SERIAL PRIMARY KEY,
+    uri VARCHAR(500) UNIQUE NOT NULL
+);
+
+CREATE TABLE endpoint_hits (
+    id BIGSERIAL PRIMARY KEY,
+    app_id INT NOT NULL,
+    uri_id INT NOT NULL,
+    ip VARCHAR(45) NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    FOREIGN KEY (app_id) REFERENCES apps(id) ON DELETE CASCADE,
+    FOREIGN KEY (uri_id) REFERENCES uris(id) ON DELETE CASCADE
+);
