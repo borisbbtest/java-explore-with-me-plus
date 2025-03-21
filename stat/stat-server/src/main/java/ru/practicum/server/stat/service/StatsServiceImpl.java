@@ -45,4 +45,14 @@ public class StatsServiceImpl implements StatsService {
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris) {
         return statsRepository.getStats(start, end, uris);
     }
+
+    @Override
+    public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
+        if (unique) {
+            return statsRepository.getUniqueStats(start, end, uris);
+        } else {
+            return statsRepository.getStats(start, end, uris);
+        }
+    }
+
 }
