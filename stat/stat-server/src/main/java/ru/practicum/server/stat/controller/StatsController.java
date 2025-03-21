@@ -2,7 +2,6 @@ package ru.practicum.server.stat.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.server.stat.service.StatsService;
 import ru.practicum.stat.dto.ViewStatsDto;
