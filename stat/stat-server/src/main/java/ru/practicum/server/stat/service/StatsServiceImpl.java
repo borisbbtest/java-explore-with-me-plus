@@ -3,6 +3,7 @@ package ru.practicum.server.stat.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.server.stat.exceptions.ValidationException;
 import ru.practicum.server.stat.mapper.StatsMapper;
 import ru.practicum.server.stat.model.App;
 import ru.practicum.server.stat.model.Uri;
@@ -36,11 +37,17 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris) {
+        if (start.isAfter(end)) {
+            throw new ValidationException("Дата начала не может быть позже даты окончания");
+        }
         return statsRepository.getStats(start, end, uris);
     }
 
     @Override
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
+        if (start.isAfter(end)) {
+            throw new ValidationException("Дата начала не может быть позже даты окончания");
+        }
         if (unique) {
             return statsRepository.getUniqueStats(start, end, uris);
         } else {
