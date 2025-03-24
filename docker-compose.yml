@@ -1,14 +1,64 @@
 services:
-  stats-server:
-    ports:
-      - "9090:9090"
-
   stats-db:
     image: postgres:16.1
-
-  ewm-service:
+    container_name: stats-db
+    restart: always
+    environment:
+      POSTGRES_DB: stats
+      POSTGRES_USER: stats_user
+      POSTGRES_PASSWORD: stats_password
     ports:
-      - "8080:8080"
+      - "5433:5432"
+    networks:
+      - explore-network
+
+  stats-server:
+    build: ./stat/stat-server
+    container_name: stats-server
+    restart: always
+    depends_on:
+      - stats-db
+    environment:
+      SPRING_PROFILES_ACTIVE: main
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
+      SPRING_DATASOURCE_USERNAME: stats_user
+      SPRING_DATASOURCE_PASSWORD: stats_password
+    ports:
+      - "9090:9090"
+    networks:
+      - explore-network
 
   ewm-db:
     image: postgres:16.1
+    container_name: ewm-db
+    restart: always
+    environment:
+      POSTGRES_DB: explore
+      POSTGRES_USER: explore_user
+      POSTGRES_PASSWORD: explore_password
+    ports:
+      - "5432:5432"
+    networks:
+      - explore-network
+
+  ewm-service:
+    build: ./main-service
+    container_name: ewm-service
+    restart: always
+    depends_on:
+      - ewm-db
+      - stats-server
+    environment:
+      SPRING_PROFILES_ACTIVE: main
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/explore
+      SPRING_DATASOURCE_USERNAME: explore_user
+      SPRING_DATASOURCE_PASSWORD: explore_password
+      STATS_SERVER_URL: http://stats-server:9090
+    ports:
+      - "8080:8080"
+    networks:
+      - explore-network
+
+networks:
+  explore-network:
+    driver: bridge
