@@ -12,18 +12,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/stats")
+@RequestMapping("/compilations")
 @RequiredArgsConstructor
-public class StatsController {
+public class CompilationController {
 
-
-    @GetMapping
-    public List<ViewStatsDto> getStats(
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
-            @RequestParam(required = false) List<String> uris,
-            @RequestParam(defaultValue = "false") boolean unique
-    ) {
-        return statsService.getStats(start, end, uris, unique);
-    }
 }
