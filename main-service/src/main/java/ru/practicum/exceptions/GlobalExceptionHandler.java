@@ -6,8 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.practicum.server.stat.exceptions.DuplicateException;
-import ru.practicum.server.stat.exceptions.ValidationException;
+import ru.practicum.exceptions.DuplicateException;
+import ru.practicum.exceptions.ValidationException;
 
 @Slf4j
 @RestControllerAdvice
