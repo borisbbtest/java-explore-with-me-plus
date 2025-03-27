@@ -1,6 +1,8 @@
 package ru.practicum.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.user.dto.UserDto;
 import ru.practicum.exceptions.ConflictException;
@@ -28,8 +30,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDto> getAll() {
-        return userRepository.findAll().stream()
+    public List<UserDto> getAll(int from, int size) {
+        Pageable pageable = PageRequest.of(from / size, size);
+        return userRepository.findAll(pageable)
+                .stream()
                 .map(UserMapper::toDto)
                 .collect(Collectors.toList());
     }

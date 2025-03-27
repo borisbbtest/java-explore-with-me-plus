@@ -15,17 +15,13 @@ public class CategoryPublicController {
 
     private final CategoryService categoryService;
 
-    @GetMapping(params = {"!from", "!size"})
-    public ResponseEntity<List<CategoryDto>> getAll() {
-        return ResponseEntity.ok(categoryService.getAll());
-    }
-
+    
     @GetMapping("/{id}")
     public ResponseEntity<CategoryDto> getById(@PathVariable Long id) {
         return ResponseEntity.ok(categoryService.getById(id));
     }
 
-    @GetMapping(params = {"from", "size"})
+    @GetMapping
     public ResponseEntity<List<CategoryDto>> getAllPaged(
             @RequestParam(defaultValue = "0") int from,
             @RequestParam(defaultValue = "10") int size
