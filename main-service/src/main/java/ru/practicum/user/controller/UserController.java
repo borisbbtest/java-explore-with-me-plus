@@ -29,6 +29,7 @@ public class UserController {
     ) {
         return userService.getAll(from, size);
     }
+
     @GetMapping(params = "ids")
     public ResponseEntity<List<UserDto>> getUserById(@RequestParam Long ids) {
         return ResponseEntity.ok(userService.getById(ids));
