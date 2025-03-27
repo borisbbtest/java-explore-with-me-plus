@@ -18,12 +18,12 @@ public class CategoryAdminController {
     private final CategoryService categoryService;
 
     @PostMapping
-    public ResponseEntity<CategoryDto> create(@RequestBody CategoryDto dto) {
+    public ResponseEntity<CategoryDto> create(@Valid @RequestBody CategoryDto dto) {
         return  new ResponseEntity<>(categoryService.createCategory(dto), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@Valid @PathVariable Long id) {
         categoryService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
