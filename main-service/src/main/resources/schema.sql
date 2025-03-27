@@ -1,37 +1,37 @@
 -- Таблица категорий
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE
 );
-CREATE INDEX idx_categories_name ON categories(name);
+CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name);
 
 -- Таблица пользователей
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE
 );
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_name ON users(name);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_name ON users(name);
 
 -- Таблица локаций
-CREATE TABLE locations (
+CREATE TABLE IF NOT EXISTS locations (
     id SERIAL PRIMARY KEY,
     lat DOUBLE PRECISION NOT NULL,
     lon DOUBLE PRECISION NOT NULL,
     UNIQUE (lat, lon)
 );
-CREATE INDEX idx_locations_lat_lon ON locations(lat, lon);
+CREATE INDEX IF NOT EXISTS idx_locations_lat_lon ON locations(lat, lon);
 
 -- Таблица состояний событий
-CREATE TABLE event_states (
+CREATE TABLE IF NOT EXISTS event_states (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL
 );
-CREATE INDEX idx_event_states_name ON event_states(name);
+CREATE INDEX IF NOT EXISTS idx_event_states_name ON event_states(name);
 
 -- Таблица событий
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     annotation TEXT NOT NULL,
@@ -48,37 +48,37 @@ CREATE TABLE events (
 );
 
 -- Индексы для ускорения поиска событий
-CREATE INDEX idx_events_category_id ON events(category_id);
-CREATE INDEX idx_events_event_date ON events(event_date);
-CREATE INDEX idx_events_initiator_id ON events(initiator_id);
-CREATE INDEX idx_events_state_id ON events(state_id);
-CREATE INDEX idx_events_location_id ON events(location_id);
-CREATE INDEX idx_events_paid ON events(paid);
+CREATE INDEX IF NOT EXISTS idx_events_category_id ON events(category_id);
+CREATE INDEX IF NOT EXISTS idx_events_event_date ON events(event_date);
+CREATE INDEX IF NOT EXISTS idx_events_initiator_id ON events(initiator_id);
+CREATE INDEX IF NOT EXISTS idx_events_state_id ON events(state_id);
+CREATE INDEX IF NOT EXISTS idx_events_location_id ON events(location_id);
+CREATE INDEX IF NOT EXISTS idx_events_paid ON events(paid);
 
 -- Таблица подборок
-CREATE TABLE compilations (
+CREATE TABLE IF NOT EXISTS compilations (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     pinned BOOLEAN NOT NULL DEFAULT FALSE
 );
-CREATE INDEX idx_compilations_pinned ON compilations(pinned);
+CREATE INDEX IF NOT EXISTS idx_compilations_pinned ON compilations(pinned);
 
 -- Таблица связи подборки и события
-CREATE TABLE compilation_events (
+CREATE TABLE IF NOT EXISTS compilation_events (
     compilation_id BIGINT NOT NULL REFERENCES compilations(id) ON DELETE CASCADE,
     event_id BIGINT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
     PRIMARY KEY (compilation_id, event_id)
 );
-CREATE INDEX idx_compilation_events_compilation_id ON compilation_events(compilation_id);
-CREATE INDEX idx_compilation_events_event_id ON compilation_events(event_id);
+CREATE INDEX IF NOT EXISTS idx_compilation_events_compilation_id ON compilation_events(compilation_id);
+CREATE INDEX IF NOT EXISTS idx_compilation_events_event_id ON compilation_events(event_id);
 
 
-CREATE TABLE request_statuses (
+CREATE TABLE IF NOT EXISTS request_statuses (
     id SERIAL PRIMARY KEY,
     name VARCHAR(20) UNIQUE NOT NULL
 );
 
-CREATE TABLE participation_requests (
+CREATE TABLE IF NOT EXISTS participation_requests (
     id BIGSERIAL PRIMARY KEY,
     requester_id BIGINT NOT NULL REFERENCES users(id),
     event_id BIGINT NOT NULL REFERENCES events(id),
@@ -88,12 +88,12 @@ CREATE TABLE participation_requests (
     CONSTRAINT uq_request UNIQUE (requester_id, event_id)
 );
 
-CREATE INDEX idx_requests_requester_id ON participation_requests(requester_id);
-CREATE INDEX idx_requests_event_id ON participation_requests(event_id);
-CREATE INDEX idx_requests_status_id ON participation_requests(status_id);
-CREATE INDEX idx_requests_created ON participation_requests(created);
+CREATE INDEX IF NOT EXISTS idx_requests_requester_id ON participation_requests(requester_id);
+CREATE INDEX IF NOT EXISTS idx_requests_event_id ON participation_requests(event_id);
+CREATE INDEX IF NOT EXISTS idx_requests_status_id ON participation_requests(status_id);
+CREATE INDEX IF NOT EXISTS idx_requests_created ON participation_requests(created);
 
 INSERT INTO request_statuses (name) VALUES
 ('PENDING'),
 ('CONFIRMED'),
-('REJECTED');
+('REJECTED') ON CONFLICT (name) DO NOTHING;
