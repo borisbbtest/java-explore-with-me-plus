@@ -96,6 +96,8 @@ public class PublicEventController {
         eventShortDtos.forEach(dto ->
                 dto.setViews(viewsMap.getOrDefault(dto.getId(), 0L))
         );
+        saveStat(request);
+
         return ResponseEntity.ok(eventShortDtos);
     }
 
