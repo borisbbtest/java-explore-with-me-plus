@@ -111,7 +111,11 @@ public class PublicEventController {
         String end = LocalDateTime.now().plusYears(300).format(dateTimeFormatter);
         List<ViewStatsDto> viewStatsDtos = getStatisticsEventViews(start,
                 end, List.of(request.getRequestURI()), true);
-        eventFullDto.setViews(viewStatsDtos.get(0).getHits());
+        if (viewStatsDtos.size() != 0) {
+            eventFullDto.setViews(viewStatsDtos.get(0).getHits());
+        } else {
+            eventFullDto.setViews(0L);
+        }
 
         log.info("Обновляем статистику");
         if (eventFullDto.getId() != null) saveStat(request);

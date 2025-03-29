@@ -8,7 +8,7 @@ import ru.practicum.event.dto.UpdateEventUserRequest;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.model.Location;
-import ru.practicum.exceptions.DuplicateException;
+import ru.practicum.exceptions.ConflictException;
 import ru.practicum.exceptions.NotFoundException;
 import ru.practicum.exceptions.ValidationException;
 import ru.practicum.request.model.Request;
@@ -51,19 +51,19 @@ public class EventValidator {
     public void validateParticipantLimit(Event event) {
         if (event.getParticipantLimit() != 0 &&
                 event.getConfirmedRequests() >= event.getParticipantLimit()) {
-            throw new ValidationException("Лимит заявок на участие в событии исчерпан");
+            throw new ConflictException("Лимит заявок на участие в событии исчерпан");
         }
     }
 
     public void validateNoConfirmedRequests(List<Request> requests) {
         if (requests.stream().anyMatch(r -> r.getStatus().getName() == RequestStatus.CONFIRMED)) {
-            throw new DuplicateException("Нельзя отменить уже подтвержденные заявки");
+            throw new ConflictException("Нельзя отменить уже подтвержденные заявки");
         }
     }
 
     public void validateAllRequestsPending(List<Request> requests) {
         if (requests.stream().anyMatch(r -> r.getStatus().getName() != RequestStatus.PENDING)) {
-            throw new DuplicateException("Все заявки должны быть в статусе ожидания");
+            throw new ConflictException("Все заявки должны быть в статусе ожидания");
         }
     }
 
@@ -85,7 +85,7 @@ public class EventValidator {
             throw new ValidationException("Только пользователь создавший событие может его редактировать");
         }
         if (oldEvent.getState().equals(EventState.PUBLISHED)) {
-            throw new ValidationException("Нельзя изменить опубликованное событие, или переданный статут несуществует");
+            throw new ConflictException("Нельзя изменить опубликованное событие, или переданный статут несуществует");
         }
         if (Objects.nonNull(updateDto.getEventDate()) &&
                 updateDto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {

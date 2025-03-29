@@ -21,6 +21,7 @@ import ru.practicum.event.model.Location;
 import ru.practicum.event.model.StateAction;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.event.repository.LocationRepository;
+import ru.practicum.exceptions.ConflictException;
 import ru.practicum.exceptions.NotFoundException;
 import ru.practicum.exceptions.ValidationException;
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
@@ -186,7 +187,7 @@ public class EventServiceImpl implements EventService {
         }
         if (oldEvent.getState().equals(EventState.PUBLISHED) ||
                 oldEvent.getState().equals(EventState.CANCELED)) {
-            throw new ValidationException("Администратор не может менять статус опубликованного или отмененного события");
+            throw new ConflictException("Администратор не может менять статус опубликованного или отмененного события");
         }
         if (Objects.nonNull(updateEventAdminRequest.getAnnotation())) {
             oldEvent.setAnnotation(updateEventAdminRequest.getAnnotation());

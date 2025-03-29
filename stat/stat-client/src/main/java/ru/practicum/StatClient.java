@@ -10,8 +10,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.practicum.stat.dto.EndpointHitDto;
 import ru.practicum.stat.dto.ViewStatsDto;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class StatClient {
@@ -56,8 +54,8 @@ public class StatClient {
 
     private String buildStatsUri(String start, String end, @Nullable List<String> uris, boolean unique) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromPath(STATS_ENDPOINT)
-                .queryParam("start", encodeValue(start))
-                .queryParam("end", encodeValue(end))
+                .queryParam("start", start)
+                .queryParam("end", end)
                 .queryParam("unique", unique);
 
         if (uris != null && !uris.isEmpty()) {
@@ -65,9 +63,5 @@ public class StatClient {
         }
 
         return builder.build().toUriString();
-    }
-
-    private String encodeValue(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }

@@ -29,7 +29,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(ValidationException e) {
         log.error("Ошибка с заполнением полей");
-        return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleException(ConflictException e) {
+        log.error("Данное действие уже выполнено");
+        return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(DuplicateException.class)
@@ -38,8 +44,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
-   @Getter
-   private static class ErrorResponse {
+
+    @Getter
+    private static class ErrorResponse {
         private final String error;
 
         public ErrorResponse(String error) {
