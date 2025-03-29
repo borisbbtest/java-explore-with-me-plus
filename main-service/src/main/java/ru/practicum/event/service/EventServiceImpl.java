@@ -11,18 +11,20 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import ru.practicum.StatClient;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
 import ru.practicum.event.dto.*;
 import ru.practicum.event.mapper.EventMapper;
-import ru.practicum.event.model.*;
+import ru.practicum.event.model.Event;
+import ru.practicum.event.model.EventState;
+import ru.practicum.event.model.Location;
+import ru.practicum.event.model.StateAction;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.event.repository.LocationRepository;
 import ru.practicum.exceptions.NotFoundException;
 import ru.practicum.exceptions.ValidationException;
-import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
+import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.mapper.RequestMapper;
 import ru.practicum.request.model.Request;
 import ru.practicum.request.model.RequestStatus;
@@ -48,9 +50,6 @@ public class EventServiceImpl implements EventService {
     private final RequestRepository requestRepository;
     private final EventValidator eventValidator;
     private final RequestStatusRepository requestStatusRepository;
-
-    private final RequestMapper requestMapper;
-    private final StatClient statClient;
 
     @Override
     @Transactional(readOnly = true)
@@ -296,8 +295,7 @@ public class EventServiceImpl implements EventService {
         if (!event.getState().equals(EventState.PUBLISHED)) {
             throw new NotFoundException("У события должен быть статус <PUBLISHED>");
         }
-
-        return null;
+        return EventMapper.toLongDto(event);
     }
 
     private void processEvents(List<Event> events, HttpServletRequest request) {

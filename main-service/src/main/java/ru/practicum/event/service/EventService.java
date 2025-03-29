@@ -1,14 +1,11 @@
 package ru.practicum.event.service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.event.dto.*;
-import ru.practicum.event.model.EventState;
-import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
+import ru.practicum.request.dto.ParticipationRequestDto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 

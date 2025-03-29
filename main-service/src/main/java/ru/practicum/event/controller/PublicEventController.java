@@ -11,15 +11,21 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.StatClient;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.dto.SearchPublicEventsParamDto;
 import ru.practicum.event.model.EventSort;
 import ru.practicum.event.service.EventService;
 import ru.practicum.exceptions.ValidationException;
+import ru.practicum.stat.dto.EndpointHitDto;
+import ru.practicum.stat.dto.ViewStatsDto;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Validated
@@ -32,6 +38,8 @@ public class PublicEventController {
     private static final int DEFAULT_PAGE_SIZE = 10;
     private static final int DEFAULT_PAGE_START = 0;
     private final EventService eventService;
+    private final StatClient statClient;
+    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(DATE_TIME_PATTERN);
 
     @GetMapping
     public ResponseEntity<List<EventShortDto>> searchPublicEvents(
@@ -51,21 +59,44 @@ public class PublicEventController {
         if (rangeStart == null) rangeStart = LocalDateTime.now();
         if (rangeEnd == null) rangeEnd = LocalDateTime.now().plusYears(100);
         validateTimeRange(rangeStart, rangeEnd);
+
         PageRequest pageRequest = createPageRequest(from, size, eventSort);
         SearchPublicEventsParamDto searchPublicEventsParamDto =
-                SearchPublicEventsParamDto.builder().text(text).
-                        categoriesIds(categoriesIds).
-                        paid(paid).
-                        rangeStart(rangeStart).
-                        rangeEnd(rangeEnd).
-                        onlyAvailable(onlyAvailable).
-                        pageRequest(pageRequest).
-                        build();
+                SearchPublicEventsParamDto.builder().text(text)
+                        .categoriesIds(categoriesIds)
+                        .paid(paid)
+                        .rangeStart(rangeStart)
+                        .rangeEnd(rangeEnd)
+                        .onlyAvailable(onlyAvailable)
+                        .pageRequest(pageRequest)
+                        .build();
+
         log.info("Запрос на получение опубликованных событий: text='{}', " +
                         "categoriesIds={}, paid={}, start={}, end={}, onlyAvailable={}, eventSort={}",
                 text, categoriesIds, paid, rangeStart, rangeEnd, onlyAvailable, eventSort);
+        List<EventShortDto> eventShortDtos = eventService.searchPublicEvents(searchPublicEventsParamDto);
+        List<Long> eventShortDtoIds = eventShortDtos.stream().map(EventShortDto::getId).toList();
 
-        return ResponseEntity.ok(eventService.searchPublicEvents(searchPublicEventsParamDto));
+        log.info("Запрос статистики для событий с id {}", eventShortDtoIds);
+        String start = rangeStart.format(dateTimeFormatter);
+        String end = rangeEnd.format(dateTimeFormatter);
+        List<String> uris = buildUrisFromPathAndIds(request.getRequestURI(), eventShortDtoIds);
+        List<ViewStatsDto> viewStatsDtos = getStatisticsEventViews(start,
+                end, uris, true);
+        Map<Long, Long> viewsMap = viewStatsDtos.stream()
+                .collect(Collectors.toMap(
+                        stats -> {
+                            String[] parts = stats.getUri().split("/");
+                            return Long.parseLong(parts[parts.length - 1]);
+                        },
+                        ViewStatsDto::getHits,
+                        (existing, replacement) -> existing
+                ));
+
+        eventShortDtos.forEach(dto ->
+                dto.setViews(viewsMap.getOrDefault(dto.getId(), 0L))
+        );
+        return ResponseEntity.ok(eventShortDtos);
     }
 
     @GetMapping("/{eventId}")
@@ -73,7 +104,19 @@ public class PublicEventController {
             @PathVariable @Positive Long eventId,
             HttpServletRequest request) {
         log.info("Запрос на получение опубликованого события с id {}", eventId);
-        return ResponseEntity.ok(eventService.getPublicEvent(eventId, request));
+        EventFullDto eventFullDto = eventService.getPublicEvent(eventId, request);
+
+        log.info("Запрос статистики для события с id {}", eventId);
+        String start = LocalDateTime.now().minusYears(100).format(dateTimeFormatter);
+        String end = LocalDateTime.now().plusYears(300).format(dateTimeFormatter);
+        List<ViewStatsDto> viewStatsDtos = getStatisticsEventViews(start,
+                end, List.of(request.getRequestURI()), true);
+        eventFullDto.setViews(viewStatsDtos.get(0).getHits());
+
+        log.info("Обновляем статистику");
+        if (eventFullDto.getId() != null) saveStat(request);
+
+        return ResponseEntity.ok(eventFullDto);
     }
 
     private PageRequest createPageRequest(int from, int size, EventSort sort) {
@@ -89,5 +132,35 @@ public class PublicEventController {
         if (start != null && end != null && start.isAfter(end)) {
             throw new ValidationException("Время начала должно быть до окончания");
         }
+    }
+
+    public void saveStat(HttpServletRequest request) {
+        EndpointHitDto hitDto = EndpointHitDto.builder()
+                .app("ewm-service-1")
+                .uri(request.getRequestURI())
+                .ip(request.getRemoteAddr())
+                .timestamp(LocalDateTime.now())
+                .build();
+        statClient.saveStatEvent(hitDto);
+    }
+
+    public List<ViewStatsDto> getStatisticsEventViews(String start,
+                                                      String end,
+                                                      List<String> uris,
+                                                      boolean unique) {
+        ResponseEntity<List<ViewStatsDto>> response = statClient.getStats(
+                start,
+                end,
+                uris,
+                unique
+        );
+
+        return response.getBody();
+    }
+
+    public List<String> buildUrisFromPathAndIds(String uriPath, List<Long> ids) {
+        return ids.stream()
+                .map(id -> uriPath + "/" + id)
+                .collect(Collectors.toList());
     }
 }

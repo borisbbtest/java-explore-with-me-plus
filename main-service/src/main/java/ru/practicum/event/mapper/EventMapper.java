@@ -3,9 +3,9 @@ package ru.practicum.event.mapper;
 import org.springframework.stereotype.Component;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.model.Category;
-import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
+import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.user.dto.UserDto;
@@ -52,7 +52,7 @@ public class EventMapper {
                         "email"))
                 .paid(event.getPaid())
                 .title(event.getTitle())
-                .views(0)
+                .views(0L)
                 .build();
     }
 
@@ -78,7 +78,7 @@ public class EventMapper {
                 .requestModeration(event.getRequestModeration())
                 .state(event.getState())
                 .title(event.getTitle())
-                .views(0)
+                .views(0L)
                 .build();
     }
 }

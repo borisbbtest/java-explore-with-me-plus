@@ -19,7 +19,7 @@ public class StatClient {
     private static final String HIT_ENDPOINT = "/hit";
     private static final String STATS_ENDPOINT = "/stats";
 
-    protected StatClient(String baseUrl) {
+    public StatClient(String baseUrl) {
         this.restClient = RestClient.builder()
                 .baseUrl(baseUrl)
                 .defaultHeaders(headers -> {
@@ -43,14 +43,15 @@ public class StatClient {
 
     public ResponseEntity<List<ViewStatsDto>> getStats(String start,
                                                        String end,
-                                                       @Nullable List<String> uris,
+                                                       List<String> uris,
                                                        boolean unique) {
         String uri = buildStatsUri(start, end, uris, unique);
 
         return restClient.get()
                 .uri(uri)
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<>() {});
+                .toEntity(new ParameterizedTypeReference<>() {
+                });
     }
 
     private String buildStatsUri(String start, String end, @Nullable List<String> uris, boolean unique) {
