@@ -6,6 +6,8 @@ import org.springframework.stereotype.Component;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.exceptions.ConflictException;
+import ru.practicum.exceptions.ValidationException;
+import ru.practicum.request.model.Request;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.model.User;
 
@@ -45,6 +47,14 @@ public class RequestValidator {
                     throw new ConflictException("Пользователь: " +
                             userId + " уже подал заявку на участи в событии: " + eventId);
                 });
+    }
+
+    public void validateRequestOwnership(User user, Request request) {
+        if (!request.getRequester().equals(user)) {
+            throw new ValidationException("Только пользователь подавший заявку может отменить ее. " +
+                    "Пользователь ID: " + user.getId() +
+                    "Заявка с ID: " + request.getId());
+        }
     }
 
     private void checkEventCapacity(Event event) {

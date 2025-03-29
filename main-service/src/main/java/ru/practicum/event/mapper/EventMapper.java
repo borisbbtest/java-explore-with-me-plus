@@ -56,7 +56,7 @@ public class EventMapper {
                 .build();
     }
 
-    public static EventFullDto toLongDto(Event event) {
+    public static EventFullDto toFullDto(Event event) {
         return EventFullDto.builder()
                 .annotation(event.getAnnotation())
                 .category(new CategoryDto(

@@ -67,7 +67,7 @@ public class RequestServiceImpl implements RequestService {
         final User user = getUserById(userId);
         final Request request = getRequestById(requestId);
 
-        validateRequestOwnership(user, request);
+        requestValidator.validateRequestOwnership(user, request);
         updateRequestStatus(request, RequestStatus.CANCELED);
 
         if (request.getStatus().getName() == RequestStatus.CONFIRMED) {
@@ -92,10 +92,13 @@ public class RequestServiceImpl implements RequestService {
         return requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Не найдена заявка с ID: " + requestId));
     }
+    private RequestStatusEntity getRequestStatusEntityByRequestStatus(RequestStatus newStatus) {
+        return requestStatusRepository.findByName(newStatus)
+                .orElseThrow(() -> new NotFoundException("Не найден статус: " + newStatus.name()));
+    }
 
     private Request buildNewRequest(User user, Event event) {
-        RequestStatusEntity requestStatusEntity =
-                requestStatusRepository.findByName(RequestStatus.PENDING).get();
+        RequestStatusEntity requestStatusEntity =getRequestStatusEntityByRequestStatus(RequestStatus.PENDING);
         return Request.builder()
                 .requester(user)
                 .event(event)
@@ -106,9 +109,9 @@ public class RequestServiceImpl implements RequestService {
 
     private void determineInitialStatus(Event event, Request request) {
         if (shouldAutoConfirm(event)) {
-            request.setStatus(requestStatusRepository.findByName(RequestStatus.CONFIRMED).get());
+            request.setStatus(getRequestStatusEntityByRequestStatus(RequestStatus.CONFIRMED));
         } else if (isEventFull(event)) {
-            request.setStatus(requestStatusRepository.findByName(RequestStatus.REJECTED).get());
+            request.setStatus(getRequestStatusEntityByRequestStatus(RequestStatus.REJECTED));
         }
     }
 
@@ -137,23 +140,12 @@ public class RequestServiceImpl implements RequestService {
         eventRepository.save(event);
     }
 
-    private void validateRequestOwnership(User user, Request request) {
-        if (!request.getRequester().equals(user)) {
-            throw new ValidationException("Только пользователь подавший заявку может отменить ее. " +
-                    "Пользователь ID: " + user.getId() +
-                    "Заявка с ID: " + request.getId());
-        }
-    }
-
     private void updateRequestStatus(Request request, RequestStatus newStatus) {
         String currentStatusName = request.getStatus().getName().name();
         if (currentStatusName.equals(newStatus.name())) {
             throw new ValidationException("Статус уже установлен: " + newStatus);
         }
-        RequestStatusEntity statusEntity = requestStatusRepository.findByName(newStatus)
-                .orElseThrow(() -> new NotFoundException("Не найден статус: " + newStatus.name()));
-
-        request.setStatus(statusEntity);
+        request.setStatus(getRequestStatusEntityByRequestStatus(newStatus));
     }
 }
 

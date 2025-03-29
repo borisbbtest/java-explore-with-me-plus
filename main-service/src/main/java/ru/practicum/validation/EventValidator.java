@@ -3,11 +3,9 @@ package ru.practicum.validation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.practicum.category.repository.CategoryRepository;
 import ru.practicum.event.dto.UpdateEventUserRequest;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
-import ru.practicum.event.model.Location;
 import ru.practicum.exceptions.ConflictException;
 import ru.practicum.exceptions.NotFoundException;
 import ru.practicum.exceptions.ValidationException;
@@ -24,14 +22,7 @@ import java.util.Objects;
 @Component
 @RequiredArgsConstructor
 public class EventValidator {
-
     private final UserRepository userRepository;
-    private final CategoryRepository categoryRepository;
-
-    public void validateEventCreation(Long userId, Long categoryId, Location location) {
-        validateUserExists(userId);
-        validateCategoryExists(categoryId);
-    }
 
     public void validateUserExists(Long userId) {
         if (!userRepository.existsById(userId)) {
@@ -39,6 +30,13 @@ public class EventValidator {
             throw new NotFoundException("Пользователя с id не найден: " + userId);
         }
     }
+
+    public void validateInitiator(Event event, User user) {
+        if (!event.getInitiator().equals(user)) {
+            throw new ValidationException("У этого события другой инициатор");
+        }
+    }
+
 
     public void validateRequestsBelongToEvent(List<Request> requests, Long eventId) {
         boolean allMatch = requests.stream()
@@ -67,13 +65,6 @@ public class EventValidator {
         }
     }
 
-    private void validateCategoryExists(Long categoryId) {
-        if (!categoryRepository.existsById(categoryId)) {
-            log.error("Категория с ID {} не найдена", categoryId);
-            throw new NotFoundException("Не найдена категория с ID: " + categoryId);
-        }
-    }
-
     public void validateEventOwnership(Event event, Long userId) {
         if (!event.getInitiator().getId().equals(userId)) {
             throw new ValidationException("Только пользователь создавший событие может получить его полное описание");
@@ -85,11 +76,40 @@ public class EventValidator {
             throw new ValidationException("Только пользователь создавший событие может его редактировать");
         }
         if (oldEvent.getState().equals(EventState.PUBLISHED)) {
-            throw new ConflictException("Нельзя изменить опубликованное событие, или переданный статут несуществует");
+            throw new ConflictException("Нельзя изменить опубликованное событие");
         }
         if (Objects.nonNull(updateDto.getEventDate()) &&
                 updateDto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new ValidationException("Событие не может начинаться ранее чем через 2 часа после обновления");
+            throw new ValidationException("Событие не может начинаться ранее чем через 2 часа");
         }
     }
+
+    public void validateAdminEventDate(Event oldEvent) {
+        if (oldEvent.getPublishedOn() == null) return;
+        LocalDateTime minEventStartTime = oldEvent.getPublishedOn().plusHours(1);
+        if (oldEvent.getEventDate().isBefore(minEventStartTime)) {
+            throw new ConflictException(
+                    "Событие не может начинаться раньше чем через 1 час после публикации. " +
+                            "Минимальное время: " + minEventStartTime
+            );
+        }
+    }
+
+    public void validateAdminPublishedEventDate(LocalDateTime newEventDate, Event oldEvent) {
+        LocalDateTime minEventStartTime = oldEvent.getPublishedOn() != null
+                ? oldEvent.getPublishedOn().plusHours(1)
+                : LocalDateTime.now().plusHours(1);
+
+        if (newEventDate != null && newEventDate.isBefore(minEventStartTime)) {
+            throw new ConflictException("Новая дата начала должна быть не ранее " + minEventStartTime);
+        }
+    }
+
+    public void validateAdminEventUpdateState(EventState currentState) {
+        if (currentState == EventState.PUBLISHED || currentState == EventState.CANCELED) {
+            throw new ConflictException("Запрещено редактирование в статусах: " +
+                    String.join(", ", EventState.PUBLISHED.name(), EventState.CANCELED.name()));
+        }
+    }
+
 }

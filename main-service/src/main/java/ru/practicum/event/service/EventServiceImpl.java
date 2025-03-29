@@ -29,6 +29,7 @@ import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.mapper.RequestMapper;
 import ru.practicum.request.model.Request;
 import ru.practicum.request.model.RequestStatus;
+import ru.practicum.request.model.RequestStatusEntity;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.request.repository.RequestStatusRepository;
 import ru.practicum.user.model.User;
@@ -36,8 +37,12 @@ import ru.practicum.user.repository.UserRepository;
 import ru.practicum.validation.EventValidator;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -69,8 +74,6 @@ public class EventServiceImpl implements EventService {
         Category category = getCategoryById(request.getCategory());
         Location location = resolveLocation(request.getLocation());
 
-        eventValidator.validateEventCreation(user.getId(), category.getId(), location);
-
         Event event = EventMapper.toEvent(request, user, category);
         event.setLocation(location);
         event.setState(EventState.PENDING);
@@ -78,7 +81,7 @@ public class EventServiceImpl implements EventService {
         Event savedEvent = eventRepository.save(event);
         log.info("Событие успешно добавлено под id {} со статусом {} и ожидается подтверждение",
                 user.getId(), event.getState());
-        return EventMapper.toLongDto(savedEvent);
+        return EventMapper.toFullDto(savedEvent);
     }
 
     @Transactional(readOnly = true)
@@ -87,7 +90,7 @@ public class EventServiceImpl implements EventService {
                                          Long eventId) {
         Event event = getEventById(eventId);
         eventValidator.validateEventOwnership(event, userId);
-        return EventMapper.toLongDto(event);
+        return EventMapper.toFullDto(event);
     }
 
     @Override
@@ -102,7 +105,7 @@ public class EventServiceImpl implements EventService {
 
         Event updatedEvent = eventRepository.save(event);
         log.info("Событие успешно обновлено под id {} и дожидается подтверждения", eventId);
-        return EventMapper.toLongDto(updatedEvent);
+        return EventMapper.toFullDto(updatedEvent);
     }
 
     @Transactional(readOnly = true)
@@ -122,7 +125,7 @@ public class EventServiceImpl implements EventService {
                                                                       EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest) {
         User user = getUserById(userId);
         Event event = getEventById(eventId);
-        validateInitiator(event, user);
+        eventValidator.validateInitiator(event, user);
 
         List<Request> requests = getAndValidateRequests(eventId, eventRequestStatusUpdateRequest.getRequestIds());
         RequestStatus status = eventRequestStatusUpdateRequest.getStatus();
@@ -162,77 +165,57 @@ public class EventServiceImpl implements EventService {
 
                     return cb.and(predicates.toArray(new Predicate[0]));
                 }, searchParams.getPageRequest()).stream()
-                .map(EventMapper::toLongDto)
+                .map(EventMapper::toFullDto)
                 .collect(Collectors.toList());
     }
 
 
     @Override
     @Transactional
-    public EventFullDto approveEventByAdmin(Long eventId,
-                                            UpdateEventAdminRequest updateEventAdminRequest) {
-        log.info("Заявка к администратору на публикацию события с id = {}", eventId);
-        Event oldEvent = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("События с id = {} нет." + eventId));
+    public EventFullDto updateEventByAdmin(Long eventId,
+                                           UpdateEventAdminRequest updateEventAdminRequest) {
+        Event oldEvent = getEventById(eventId);
+        eventValidator.validateAdminPublishedEventDate(updateEventAdminRequest.getEventDate(), oldEvent);
+        eventValidator.validateAdminEventDate(oldEvent);
+        eventValidator.validateAdminEventUpdateState(oldEvent.getState());
 
-        if ((Objects.nonNull(updateEventAdminRequest.getEventDate()) &&
-                updateEventAdminRequest.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) ||
-                oldEvent.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
-            throw new ValidationException("Событие не может начинаться ранее" +
-                    " чем через 1 час после редактирования администратором");
-        }
-        if (oldEvent.getPublishedOn() != null && LocalDateTime.now().plusHours(1).isBefore(oldEvent.getPublishedOn())) {
-            throw new ValidationException("Дата начала изменяемого события должна быть не ранее " +
-                    "чем за час от даты публикации.");
-        }
-        if (oldEvent.getState().equals(EventState.PUBLISHED) ||
-                oldEvent.getState().equals(EventState.CANCELED)) {
-            throw new ConflictException("Администратор не может менять статус опубликованного или отмененного события");
-        }
-        if (Objects.nonNull(updateEventAdminRequest.getAnnotation())) {
-            oldEvent.setAnnotation(updateEventAdminRequest.getAnnotation());
-        }
-        if (Objects.nonNull(updateEventAdminRequest.getCategory())) {
-            Category category = categoryRepository.findById(updateEventAdminRequest.getCategory())
-                    .orElseThrow(() -> new ValidationException("Категория указана неверно"));
-            oldEvent.setCategory(category);
-        }
-        if (Objects.nonNull(updateEventAdminRequest.getDescription())) {
-            oldEvent.setDescription(updateEventAdminRequest.getDescription());
-        }
-        if (Objects.nonNull(updateEventAdminRequest.getEventDate())) {
-            oldEvent.setEventDate(updateEventAdminRequest.getEventDate());
-        }
-        if (Objects.nonNull(updateEventAdminRequest.getLocation())) {
-            oldEvent.setLocation(updateEventAdminRequest.getLocation());
-        }
-        if (Objects.nonNull(updateEventAdminRequest.getPaid())) {
-            oldEvent.setPaid(updateEventAdminRequest.getPaid());
-        }
-        if (Objects.nonNull(updateEventAdminRequest.getParticipantLimit())) {
-            oldEvent.setParticipantLimit(updateEventAdminRequest.getParticipantLimit());
-        }
-        if (Objects.nonNull(updateEventAdminRequest.getRequestModeration())) {
-            oldEvent.setRequestModeration(updateEventAdminRequest.getRequestModeration());
-        }
-        if (Objects.nonNull(updateEventAdminRequest.getStateAction()) &&
-                oldEvent.getState().equals(EventState.PENDING) &&
-                updateEventAdminRequest.getStateAction().equals(StateAction.PUBLISH_EVENT)) {
-            oldEvent.setState(EventState.PUBLISHED);
-            oldEvent.setPublishedOn(LocalDateTime.now());
-        }
-        if (Objects.nonNull(updateEventAdminRequest.getStateAction()) &&
-                oldEvent.getState().equals(EventState.PENDING) &&
-                updateEventAdminRequest.getStateAction().equals(StateAction.REJECT_EVENT)) {
-            oldEvent.setState(EventState.CANCELED);
-            oldEvent.setPublishedOn(null);
-        }
-        if (Objects.nonNull(updateEventAdminRequest.getTitle())) {
-            oldEvent.setTitle(updateEventAdminRequest.getTitle());
-        }
+        Stream.<Runnable>of(
+                () -> Optional.ofNullable(updateEventAdminRequest.getAnnotation()).ifPresent(oldEvent::setAnnotation),
+                () -> Optional.ofNullable(updateEventAdminRequest.getDescription()).ifPresent(oldEvent::setDescription),
+                () -> Optional.ofNullable(updateEventAdminRequest.getEventDate()).ifPresent(oldEvent::setEventDate),
+                () -> Optional.ofNullable(updateEventAdminRequest.getLocation()).ifPresent(oldEvent::setLocation),
+                () -> Optional.ofNullable(updateEventAdminRequest.getPaid()).ifPresent(oldEvent::setPaid),
+                () -> Optional.ofNullable(updateEventAdminRequest.getParticipantLimit()).ifPresent(oldEvent::setParticipantLimit),
+                () -> Optional.ofNullable(updateEventAdminRequest.getRequestModeration()).ifPresent(oldEvent::setRequestModeration),
+                () -> Optional.ofNullable(updateEventAdminRequest.getTitle()).ifPresent(oldEvent::setTitle)
+        ).forEach(Runnable::run);
+        Optional.ofNullable(updateEventAdminRequest.getCategory())
+                .map(categoryId -> categoryRepository.findById(categoryId)
+                        .orElseThrow(() -> new ValidationException("Не найдена категория с ID: " + categoryId)))
+                .ifPresent(oldEvent::setCategory);
+        Optional.ofNullable(updateEventAdminRequest.getStateAction())
+                .ifPresent(action -> handleStateUpdateEventAdminRequest(action, oldEvent));
         Event event = eventRepository.save(oldEvent);
         log.info("Событие успешно обновлено администратором");
-        return EventMapper.toLongDto(event);
+        return EventMapper.toFullDto(event);
+    }
+
+    private void handleStateUpdateEventAdminRequest(StateAction action, Event event) {
+        if (event.getState() != EventState.PENDING) {
+            throw new ConflictException("Изменение статуса возможно только для событий в состоянии PENDING");
+        }
+
+        switch (action) {
+            case PUBLISH_EVENT -> {
+                event.setState(EventState.PUBLISHED);
+                event.setPublishedOn(LocalDateTime.now());
+            }
+            case REJECT_EVENT -> {
+                event.setState(EventState.CANCELED);
+                event.setPublishedOn(null);
+            }
+            default -> throw new UnsupportedOperationException("Неподдерживаемая операция: " + action);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -272,7 +255,7 @@ public class EventServiceImpl implements EventService {
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        // Выполнение запроса
+
         Page<Event> eventsPage = eventRepository.findAll(
                 specification,
                 PageRequest.of(searchParams.getPageRequest().getPageNumber(),
@@ -281,8 +264,9 @@ public class EventServiceImpl implements EventService {
         );
 
         List<Event> events = eventsPage.getContent();
-        processEvents(events, searchParams.getRequest());
-
+        if (events.isEmpty()) {
+            return new ArrayList<>();
+        }
         return paginateAndMap(events, searchParams.getPageRequest());
     }
 
@@ -290,20 +274,11 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventFullDto getPublicEvent(Long eventId,
                                        HttpServletRequest request) {
-
-        log.info("Запрос на получение опубликованого события с id {}", eventId);
         Event event = getEventById(eventId);
         if (!event.getState().equals(EventState.PUBLISHED)) {
             throw new NotFoundException("У события должен быть статус <PUBLISHED>");
         }
-        return EventMapper.toLongDto(event);
-    }
-
-    private void processEvents(List<Event> events, HttpServletRequest request) {
-        if (events.isEmpty()) {
-            throw new ValidationException("Нет опубликованных событий");
-        }
-
+        return EventMapper.toFullDto(event);
     }
 
     private List<EventShortDto> paginateAndMap(List<Event> events, PageRequest pageRequest) {
@@ -380,12 +355,6 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    public void validateInitiator(Event event, User user) {
-        if (!event.getInitiator().equals(user)) {
-            throw new ValidationException("У этого события другой инициатор");
-        }
-    }
-
     private List<Request> getAndValidateRequests(Long eventId, List<Long> requestIds) {
         List<Request> requests = requestRepository.findRequestByIdIn(requestIds);
         eventValidator.validateRequestsBelongToEvent(requests, eventId);
@@ -394,12 +363,7 @@ public class EventServiceImpl implements EventService {
 
     private Map<String, List<ParticipationRequestDto>> processRejection(List<Request> requests) {
         eventValidator.validateNoConfirmedRequests(requests);
-
-        requests.forEach(request -> request.setStatus(
-                requestStatusRepository.findByName(RequestStatus.REJECTED)
-                        .orElseThrow(() -> new IllegalArgumentException("Не верный статус"))
-        ));
-
+        updateRequestStatuses(requests, RequestStatus.REJECTED);
         List<ParticipationRequestDto> rejectedRequests = requestRepository.saveAll(requests)
                 .stream()
                 .map(RequestMapper::toRequestDto)
@@ -409,10 +373,10 @@ public class EventServiceImpl implements EventService {
     }
 
     private void updateRequestStatuses(List<Request> requests, RequestStatus status) {
-        requests.forEach(request -> request.setStatus(
+        RequestStatusEntity requestStatusEntity =
                 requestStatusRepository.findByName(status)
-                        .orElseThrow(() -> new IllegalArgumentException("Не верный статус"))
-        ));
+                        .orElseThrow(() -> new IllegalArgumentException("Не верный статус"));
+        requests.forEach(request -> request.setStatus(requestStatusEntity));
     }
 
     private Map<String, List<ParticipationRequestDto>> processConfirmation(Event event, List<Request> requests) {
@@ -429,8 +393,8 @@ public class EventServiceImpl implements EventService {
         updateEventConfirmedRequests(event, confirmed.size());
 
         return Map.of(
-                "confirmedRequests", mapToDtoList(confirmed),
-                "rejectedRequests", mapToDtoList(rejected)
+                "confirmedRequests", mapToParticipationRequestDtoList(confirmed),
+                "rejectedRequests", mapToParticipationRequestDtoList(rejected)
         );
     }
 
@@ -439,7 +403,7 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
     }
 
-    private List<ParticipationRequestDto> mapToDtoList(List<Request> requests) {
+    private List<ParticipationRequestDto> mapToParticipationRequestDtoList(List<Request> requests) {
         return requests.stream()
                 .map(RequestMapper::toRequestDto)
                 .toList();

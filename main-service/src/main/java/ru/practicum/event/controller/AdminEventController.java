@@ -68,18 +68,20 @@ public class AdminEventController {
     }
 
     @PatchMapping("/{eventId}")
-    public ResponseEntity<EventFullDto> approveEventByAdmin(
+    public ResponseEntity<EventFullDto> updateEventByAdmin(
             @PathVariable @Positive Long eventId,
             @RequestBody @Valid UpdateEventAdminRequest updateEventAdminRequest) {
-        log.info("Админ утверждение события с ID {} и данными: {}", eventId, updateEventAdminRequest);
+        log.info("Редактирование данных события и его статуса (отклонение/публикация) id = {} и изменения: {}",
+                eventId, updateEventAdminRequest);
+
         return ResponseEntity.ok(
-                eventService.approveEventByAdmin(eventId, updateEventAdminRequest)
+                eventService.updateEventByAdmin(eventId, updateEventAdminRequest)
         );
     }
 
     private void validateTimeRange(LocalDateTime start, LocalDateTime end) {
         if (start.isAfter(end)) {
-            log.error("Invalid time range: {} - {}", start, end);
+            log.error("Временной промежуток задан неверно: {} - {}", start, end);
             throw new ValidationException("Временной промежуток задан неверно");
         }
     }

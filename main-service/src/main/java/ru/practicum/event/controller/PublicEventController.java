@@ -21,6 +21,7 @@ import ru.practicum.exceptions.ValidationException;
 import ru.practicum.stat.dto.EndpointHitDto;
 import ru.practicum.stat.dto.ViewStatsDto;
 
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -55,10 +56,12 @@ public class PublicEventController {
             @RequestParam(defaultValue = "" + DEFAULT_PAGE_START) @PositiveOrZero int from,
             @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE) @Positive int size,
             HttpServletRequest request) {
-
+        log.info("Запрос на получение опубликованных событий: text='{}', " +
+                        "categoriesIds={}, paid={}, start={}, end={}, onlyAvailable={}, eventSort={}",
+                text, categoriesIds, paid, rangeStart, rangeEnd, onlyAvailable, eventSort);
+        validateTimeRange(rangeStart, rangeEnd);
         if (rangeStart == null) rangeStart = LocalDateTime.now();
         if (rangeEnd == null) rangeEnd = LocalDateTime.now().plusYears(100);
-        validateTimeRange(rangeStart, rangeEnd);
 
         PageRequest pageRequest = createPageRequest(from, size, eventSort);
         SearchPublicEventsParamDto searchPublicEventsParamDto =
@@ -71,9 +74,6 @@ public class PublicEventController {
                         .pageRequest(pageRequest)
                         .build();
 
-        log.info("Запрос на получение опубликованных событий: text='{}', " +
-                        "categoriesIds={}, paid={}, start={}, end={}, onlyAvailable={}, eventSort={}",
-                text, categoriesIds, paid, rangeStart, rangeEnd, onlyAvailable, eventSort);
         List<EventShortDto> eventShortDtos = eventService.searchPublicEvents(searchPublicEventsParamDto);
         List<Long> eventShortDtoIds = eventShortDtos.stream().map(EventShortDto::getId).toList();
 
@@ -96,6 +96,7 @@ public class PublicEventController {
         eventShortDtos.forEach(dto ->
                 dto.setViews(viewsMap.getOrDefault(dto.getId(), 0L))
         );
+        log.info("Обновляем статистику");
         saveStat(request);
 
         return ResponseEntity.ok(eventShortDtos);
@@ -166,7 +167,7 @@ public class PublicEventController {
 
     public List<String> buildUrisFromPathAndIds(String uriPath, List<Long> ids) {
         return ids.stream()
-                .map(id -> uriPath + "/" + id)
+                .map(id -> Path.of(uriPath, String.valueOf(id)).toString())
                 .collect(Collectors.toList());
     }
 }
