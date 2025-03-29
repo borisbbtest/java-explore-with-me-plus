@@ -19,7 +19,7 @@ public class CategoryAdminController {
 
     @PostMapping
     public ResponseEntity<CategoryDto> create(@Valid @RequestBody CategoryDto dto) {
-        return  new ResponseEntity<>(categoryService.createCategory(dto), HttpStatus.CREATED);
+        return new ResponseEntity<>(categoryService.createCategory(dto), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")

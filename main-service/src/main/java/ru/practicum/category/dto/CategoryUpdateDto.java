@@ -13,7 +13,7 @@ import ru.practicum.validation.NotOnlySpaces;
 public class CategoryUpdateDto {
 
     @NotBlank(message = "Название категории не может быть пустым")
-    @Size(min = 1, max = 50, message = "Category name must be between 1 and 50 characters")
+    @Size(min = 1, max = 50, message = "Категория должна быть от 1 до 50 символов")
     @NotOnlySpaces
     private String name;
 }
