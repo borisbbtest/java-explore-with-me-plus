@@ -12,8 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.event.dto.EventResponseLongDto;
-import ru.practicum.event.dto.EventUpdateDto;
+import ru.practicum.event.dto.EventFullDto;
+import ru.practicum.event.dto.SearchAdminEventsParamDto;
+import ru.practicum.event.dto.UpdateEventAdminRequest;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.service.EventService;
 import ru.practicum.exceptions.ValidationException;
@@ -33,49 +34,53 @@ public class AdminEventController {
     private final EventService eventService;
 
     @GetMapping
-    public ResponseEntity<List<EventResponseLongDto>> searchEventsByAdmin(
+    public ResponseEntity<List<EventFullDto>> searchEventsByAdmin(
             @RequestParam(required = false) List<Long> users,
             @RequestParam(required = false) List<String> stateStrings,
-            @RequestParam(required = false) List<Long> categories,
+            @RequestParam(required = false) List<Long> categoriesIds,
             @RequestParam(required = false)
             @DateTimeFormat(pattern = DATE_TIME_PATTERN) LocalDateTime rangeStart,
             @RequestParam(required = false)
             @DateTimeFormat(pattern = DATE_TIME_PATTERN) LocalDateTime rangeEnd,
             @RequestParam(defaultValue = "0") @PositiveOrZero int from,
             @RequestParam(defaultValue = "10") @Positive int size) {
+
+        if (rangeStart == null) rangeStart = LocalDateTime.now();
+        if (rangeEnd == null) rangeEnd = LocalDateTime.now().plusYears(100);
         validateTimeRange(rangeStart, rangeEnd);
-        LocalDateTime start = (rangeStart == null) ? LocalDateTime.now() : rangeStart;
-        LocalDateTime end = (rangeStart == null) ? LocalDateTime.now().plusYears(100) : rangeEnd;
-        List<EventState> states = parseEventStates(stateStrings);
-        log.info("Административное событие поиск события по параметрам: " +
-                        "users={}, states={}, categories={}, start={}, end={}",
-                users, states, categories, start, end);
         PageRequest pageRequest = createPageRequest(from, size);
-        return ResponseEntity.ok(
-                eventService.searchEventsByAdmin(
-                        users,
-                        states,
-                        categories,
-                        rangeStart,
-                        rangeEnd,
-                        pageRequest
-                )
+
+        List<EventState> states = parseEventStates(stateStrings);
+        log.info("Админ поиск события по параметрам: " +
+                        "users={}, states={}, categoriesIds={}, rangeStart={}, rangeEnd={}",
+                users, states, categoriesIds, rangeStart, rangeEnd);
+        SearchAdminEventsParamDto searchAdminEventsParamDto =
+                SearchAdminEventsParamDto.builder()
+                        .users(users)
+                        .eventStates(states)
+                        .categoriesIds(categoriesIds)
+                        .rangeStart(rangeStart)
+                        .rangeEnd(rangeEnd)
+                        .pageRequest(pageRequest)
+                        .build();
+        return ResponseEntity.ok(eventService.searchEventsByAdmin(searchAdminEventsParamDto)
         );
     }
 
     @PatchMapping("/{eventId}")
-    public ResponseEntity<EventResponseLongDto> approveEventByAdmin(
+    public ResponseEntity<EventFullDto> approveEventByAdmin(
             @PathVariable @Positive Long eventId,
-            @RequestBody @Valid EventUpdateDto updateRequest) {
-        log.info("Административное событие утверждение события с ID {} и данными: {}", eventId, updateRequest);
+            @RequestBody @Valid UpdateEventAdminRequest updateEventAdminRequest) {
+        log.info("Админ утверждение события с ID {} и данными: {}", eventId, updateEventAdminRequest);
         return ResponseEntity.ok(
-                eventService.approveEventByAdmin(eventId, updateRequest)
+                eventService.approveEventByAdmin(eventId, updateEventAdminRequest)
         );
     }
 
     private void validateTimeRange(LocalDateTime start, LocalDateTime end) {
-        if (start != null && end != null && start.isAfter(end)) {
-            throw new ValidationException("Время начала должно быть до окончания");
+        if (start.isAfter(end)) {
+            log.error("Invalid time range: {} - {}", start, end);
+            throw new ValidationException("Временной промежуток задан неверно");
         }
     }
 

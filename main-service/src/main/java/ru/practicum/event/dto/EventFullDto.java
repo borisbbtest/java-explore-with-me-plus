@@ -12,37 +12,23 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class EventResponseLongDto {
-
+public class EventFullDto {
     String annotation;
-
     CategoryDto category;
-
     Integer confirmedRequests;
-
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime createdOn;
-
     String description;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime eventDate;
-
     Long id;
-
     UserDto initiator;
-
     Location location;
-
     Boolean paid;
-
     Integer participantLimit;
-
     LocalDateTime publishedOn;
-
     Boolean requestModeration;
-
     EventState state;
-
     String title;
-
     Integer views;
 }

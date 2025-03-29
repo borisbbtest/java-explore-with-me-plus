@@ -11,32 +11,22 @@ import ru.practicum.event.model.StateAction;
 import java.time.LocalDateTime;
 
 @Data
-public class EventUpdateDto {
-
-    @Size(min = 3, max = 120)
-    String title;
-
+public class UpdateEventAdminRequest {
     @Size(min = 20, max = 2000)
     String annotation;
-
-    @Size(min = 20, max = 7000)
-    String description;
-
     @PositiveOrZero
     Long category;
-
-    @PositiveOrZero
-    Integer participantLimit;
-
-    Boolean paid;
-
-    Location location;
-
+    @Size(min = 20, max = 7000)
+    String description;
     @Future
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime eventDate;
-
+    Location location;
+    Boolean paid;
+    @PositiveOrZero
+    Integer participantLimit;
     Boolean requestModeration;
-
     StateAction stateAction;
+    @Size(min = 3, max = 120)
+    String title;
 }

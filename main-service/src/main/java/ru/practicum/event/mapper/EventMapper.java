@@ -3,9 +3,9 @@ package ru.practicum.event.mapper;
 import org.springframework.stereotype.Component;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.model.Category;
-import ru.practicum.event.dto.EventRequestDto;
-import ru.practicum.event.dto.EventResponseLongDto;
-import ru.practicum.event.dto.EventResponseShortDto;
+import ru.practicum.event.dto.NewEventDto;
+import ru.practicum.event.dto.EventFullDto;
+import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.user.dto.UserDto;
@@ -16,29 +16,29 @@ import java.time.LocalDateTime;
 @Component
 public class EventMapper {
 
-    public static Event toEvent(EventRequestDto eventRequestDto,
+    public static Event toEvent(NewEventDto newEventDto,
                                 User initiator,
                                 Category category) {
 
         return Event.builder()
                 .initiator(initiator)
-                .annotation(eventRequestDto.getAnnotation())
+                .annotation(newEventDto.getAnnotation())
                 .category(category)
-                .description(eventRequestDto.getDescription())
-                .eventDate(eventRequestDto.getEventDate())
-                .location(eventRequestDto.getLocation())
-                .paid(eventRequestDto.getPaid())
-                .participantLimit(eventRequestDto.getParticipantLimit())
-                .requestModeration(eventRequestDto.getRequestModeration())
-                .title(eventRequestDto.getTitle())
+                .description(newEventDto.getDescription())
+                .eventDate(newEventDto.getEventDate())
+                .location(newEventDto.getLocation())
+                .paid(newEventDto.getPaid())
+                .participantLimit(newEventDto.getParticipantLimit())
+                .requestModeration(newEventDto.getRequestModeration())
+                .title(newEventDto.getTitle())
                 .createdOn(LocalDateTime.now())
                 .state(EventState.PENDING)
                 .confirmedRequests(0)
                 .build();
     }
 
-    public static EventResponseShortDto toShortDto(Event event) {
-        return EventResponseShortDto.builder()
+    public static EventShortDto toShortDto(Event event) {
+        return EventShortDto.builder()
                 .annotation(event.getAnnotation())
                 .category(new CategoryDto(
                         event.getCategory().getId(),
@@ -56,8 +56,8 @@ public class EventMapper {
                 .build();
     }
 
-    public static EventResponseLongDto toLongDto(Event event) {
-        return EventResponseLongDto.builder()
+    public static EventFullDto toLongDto(Event event) {
+        return EventFullDto.builder()
                 .annotation(event.getAnnotation())
                 .category(new CategoryDto(
                         event.getCategory().getId(),

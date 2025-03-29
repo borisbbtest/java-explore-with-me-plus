@@ -10,5 +10,4 @@ import java.util.Optional;
 @Repository
 public interface RequestStatusRepository extends JpaRepository<RequestStatusEntity, Long> {
     Optional<RequestStatusEntity> findByName(RequestStatus name);
-
 }

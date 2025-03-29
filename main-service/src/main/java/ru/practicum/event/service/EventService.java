@@ -5,8 +5,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.event.dto.*;
 import ru.practicum.event.model.EventState;
-import ru.practicum.request.dto.RequestDto;
-import ru.practicum.request.dto.RequestUpdateDto;
+import ru.practicum.request.dto.ParticipationRequestDto;
+import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,46 +14,33 @@ import java.util.Map;
 
 public interface EventService {
 
-    List<EventResponseShortDto> getUserEvents(Long userId,
-                                        Pageable pageable);
+    List<EventShortDto> getUserEvents(Long userId,
+                                      Pageable pageable);
 
-    EventResponseLongDto createEvent(Long userId,
-                              EventRequestDto eventRequestDto);
+    EventFullDto createEvent(Long userId,
+                             NewEventDto newEventDto);
 
-    EventResponseLongDto getUserEventById(Long userId,
+    EventFullDto getUserEventById(Long userId,
                                   Long eventId);
 
-    EventResponseLongDto updateUserEvent(Long userId,
-                                Long eventId,
-                                EventUpdateUserDto eventUpdateUserDto);
+    EventFullDto updateUserEvent(Long userId,
+                                 Long eventId,
+                                 UpdateEventUserRequest updateEventUserRequest);
 
-    List<RequestDto> getEventRequests(Long userId,
-                                           Long eventId);
+    List<ParticipationRequestDto> getEventRequests(Long userId,
+                                                   Long eventId);
 
-    Map<String, List<RequestDto>> approveRequests(Long userId,
-                                                  Long eventId,
-                                                  RequestUpdateDto requestUpdateDto);
+    Map<String, List<ParticipationRequestDto>> approveRequests(Long userId,
+                                                               Long eventId,
+                                                               EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest);
 
-    List<EventResponseLongDto> searchEventsByAdmin(List<Long> usersId,
-                                                   List<EventState> states,
-                                                   List<Long> categoriesId,
-                                                   LocalDateTime start,
-                                                   LocalDateTime end,
-                                                   Pageable pageable);
+    List<EventFullDto> searchEventsByAdmin(SearchAdminEventsParamDto searchAdminEventsParamDto);
 
-    EventResponseLongDto approveEventByAdmin(Long eventId,
-                                             EventUpdateDto eventUpdateDto);
+    EventFullDto approveEventByAdmin(Long eventId,
+                                     UpdateEventAdminRequest updateEventAdminRequest);
 
-    List<EventResponseShortDto> searchPublicEvents(String text,
-                                              List<Long> categories,
-                                              Boolean paid,
-                                              LocalDateTime start,
-                                              LocalDateTime end,
-                                              boolean onlyAvailable,
-                                              PageRequest pageRequest,
-                                              HttpServletRequest request
-                                              );
+    List<EventShortDto> searchPublicEvents(SearchPublicEventsParamDto searchPublicEventsParamDto);
 
-    EventResponseLongDto getPublicEvent(Long eventId,
-                                        HttpServletRequest request);
+    EventFullDto getPublicEvent(Long eventId,
+                                HttpServletRequest request);
 }

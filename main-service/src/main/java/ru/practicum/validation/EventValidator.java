@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.category.repository.CategoryRepository;
-import ru.practicum.event.dto.EventUpdateUserDto;
+import ru.practicum.event.dto.UpdateEventUserRequest;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
 import ru.practicum.event.model.Location;
@@ -80,7 +80,7 @@ public class EventValidator {
         }
     }
 
-    public void validateUserUpdate(Event oldEvent, User user, EventUpdateUserDto updateDto) {
+    public void validateUserUpdate(Event oldEvent, User user, UpdateEventUserRequest updateDto) {
         if (!oldEvent.getInitiator().getId().equals(user.getId())) {
             throw new ValidationException("Только пользователь создавший событие может его редактировать");
         }

@@ -9,7 +9,7 @@ import ru.practicum.event.model.Event;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exceptions.NotFoundException;
 import ru.practicum.exceptions.ValidationException;
-import ru.practicum.request.dto.RequestDto;
+import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.mapper.RequestMapper;
 import ru.practicum.request.model.Request;
 import ru.practicum.request.model.RequestStatus;
@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Transactional
 public class RequestServiceImpl implements RequestService {
-
     private final RequestRepository requestRepository;
     private final RequestStatusRepository requestStatusRepository;
     private final UserRepository userRepository;
@@ -38,7 +37,7 @@ public class RequestServiceImpl implements RequestService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<RequestDto> getUserRequests(Long userId) {
+    public List<ParticipationRequestDto> getUserRequests(Long userId) {
         log.debug("Запрос на получение всех заявок участия пользователя с ID: {}", userId);
         return requestRepository.findByRequesterId(userId).stream()
                 .map(RequestMapper::toRequestDto)
@@ -46,7 +45,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    public RequestDto createParticipationRequest(Long userId, Long eventId) {
+    public ParticipationRequestDto createParticipationRequest(Long userId, Long eventId) {
         final User user = getUserById(userId);
         final Event event = getEventById(eventId);
 
@@ -64,7 +63,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    public RequestDto cancelParticipationRequest(Long userId, Long requestId) {
+    public ParticipationRequestDto cancelParticipationRequest(Long userId, Long requestId) {
         final User user = getUserById(userId);
         final Request request = getRequestById(requestId);
 
@@ -147,10 +146,14 @@ public class RequestServiceImpl implements RequestService {
     }
 
     private void updateRequestStatus(Request request, RequestStatus newStatus) {
-        if (request.getStatus().getName() == newStatus) {
+        String currentStatusName = request.getStatus().getName().name();
+        if (currentStatusName.equals(newStatus.name())) {
             throw new ValidationException("Статус уже установлен: " + newStatus);
         }
-        request.setStatus(requestStatusRepository.findByName(newStatus).get());
+        RequestStatusEntity statusEntity = requestStatusRepository.findByName(newStatus)
+                .orElseThrow(() -> new NotFoundException("Не найден статус: " + newStatus.name()));
+
+        request.setStatus(statusEntity);
     }
 }
 

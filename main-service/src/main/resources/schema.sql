@@ -98,4 +98,5 @@ CREATE INDEX IF NOT EXISTS idx_requests_created ON participation_requests(create
 INSERT INTO request_statuses (name) VALUES
 ('PENDING'),
 ('CONFIRMED'),
-('REJECTED') ON CONFLICT (name) DO NOTHING;
+('REJECTED'),
+('CANCELED')ON CONFLICT (name) DO NOTHING;

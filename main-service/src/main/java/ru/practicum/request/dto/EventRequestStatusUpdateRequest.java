@@ -7,11 +7,9 @@ import ru.practicum.request.model.RequestStatus;
 import java.util.List;
 
 @Data
-public class RequestUpdateDto {
-
+public class EventRequestStatusUpdateRequest {
     @NotNull
     List<Long> requestIds;
-
     @NotNull
     RequestStatus status;
 }
