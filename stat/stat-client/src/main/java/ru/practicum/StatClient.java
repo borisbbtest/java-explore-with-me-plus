@@ -10,8 +10,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.practicum.stat.dto.EndpointHitDto;
 import ru.practicum.stat.dto.ViewStatsDto;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class StatClient {
@@ -19,7 +17,7 @@ public class StatClient {
     private static final String HIT_ENDPOINT = "/hit";
     private static final String STATS_ENDPOINT = "/stats";
 
-    protected StatClient(String baseUrl) {
+    public StatClient(String baseUrl) {
         this.restClient = RestClient.builder()
                 .baseUrl(baseUrl)
                 .defaultHeaders(headers -> {
@@ -43,20 +41,21 @@ public class StatClient {
 
     public ResponseEntity<List<ViewStatsDto>> getStats(String start,
                                                        String end,
-                                                       @Nullable List<String> uris,
+                                                       List<String> uris,
                                                        boolean unique) {
         String uri = buildStatsUri(start, end, uris, unique);
 
         return restClient.get()
                 .uri(uri)
                 .retrieve()
-                .toEntity(new ParameterizedTypeReference<>() {});
+                .toEntity(new ParameterizedTypeReference<>() {
+                });
     }
 
     private String buildStatsUri(String start, String end, @Nullable List<String> uris, boolean unique) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromPath(STATS_ENDPOINT)
-                .queryParam("start", encodeValue(start))
-                .queryParam("end", encodeValue(end))
+                .queryParam("start", start)
+                .queryParam("end", end)
                 .queryParam("unique", unique);
 
         if (uris != null && !uris.isEmpty()) {
@@ -64,9 +63,5 @@ public class StatClient {
         }
 
         return builder.build().toUriString();
-    }
-
-    private String encodeValue(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }

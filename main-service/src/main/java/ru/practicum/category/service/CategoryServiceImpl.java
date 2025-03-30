@@ -29,22 +29,20 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public CategoryDto update(Long categoryId, CategoryUpdateDto dto) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException("Категория не найдена: " + categoryId));
+
+        category.setName(dto.getName());
+
+        return CategoryMapper.toDto(categoryRepository.save(category));
+    }
+
+    @Override
     public List<CategoryDto> getAll() {
         return categoryRepository.findAll().stream()
                 .map(CategoryMapper::toDto)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public CategoryDto getById(Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Категория не найдена"));
-        return CategoryMapper.toDto(category);
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        categoryRepository.deleteById(id);
     }
 
     @Override
@@ -56,12 +54,17 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public CategoryDto update(Long catId, CategoryUpdateDto dto) {
-        Category category = categoryRepository.findById(catId)
-                .orElseThrow(() -> new NotFoundException("Категория не найдена: " + catId));
-
-        category.setName(dto.getName());
-
-        return CategoryMapper.toDto(categoryRepository.save(category));
+    public CategoryDto getById(Long categoryId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException("Категория не найдена"));
+        return CategoryMapper.toDto(category);
     }
+
+    @Override
+    public void deleteById(Long categoryId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException("Категория не найдена"));
+        categoryRepository.deleteById(categoryId);
+    }
+
 }
