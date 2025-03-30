@@ -92,13 +92,14 @@ public class RequestServiceImpl implements RequestService {
         return requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Не найдена заявка с ID: " + requestId));
     }
+
     private RequestStatusEntity getRequestStatusEntityByRequestStatus(RequestStatus newStatus) {
         return requestStatusRepository.findByName(newStatus)
                 .orElseThrow(() -> new NotFoundException("Не найден статус: " + newStatus.name()));
     }
 
     private Request buildNewRequest(User user, Event event) {
-        RequestStatusEntity requestStatusEntity =getRequestStatusEntityByRequestStatus(RequestStatus.PENDING);
+        RequestStatusEntity requestStatusEntity = getRequestStatusEntityByRequestStatus(RequestStatus.PENDING);
         return Request.builder()
                 .requester(user)
                 .event(event)
