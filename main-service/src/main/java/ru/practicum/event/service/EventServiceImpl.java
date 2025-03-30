@@ -69,12 +69,12 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto createEvent(Long userId, NewEventDto newEventDto) {
+    public EventFullDto createEvent(Long userId, NewEventDto request) {
         User user = getUserById(userId);
-        Category category = getCategoryById(newEventDto.getCategory());
-        Location location = resolveLocation(newEventDto.getLocation());
+        Category category = getCategoryById(request.getCategory());
+        Location location = resolveLocation(request.getLocation());
 
-        Event event = EventMapper.toEvent(newEventDto, user, category);
+        Event event = EventMapper.toEvent(request, user, category);
         event.setLocation(location);
         event.setState(EventState.PENDING);
 
@@ -100,7 +100,7 @@ public class EventServiceImpl implements EventService {
         User user = getUserById(userId);
         Event event = getEventById(eventId);
 
-        eventValidator.validateUserUpdateEvent(event, user, updateDto);
+        eventValidator.validateUserUpdate(event, user, updateDto);
         applyUserUpdates(event, updateDto);
 
         Event updatedEvent = eventRepository.save(event);
