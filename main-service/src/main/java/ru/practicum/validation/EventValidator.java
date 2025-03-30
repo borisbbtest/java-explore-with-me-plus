@@ -3,6 +3,7 @@ package ru.practicum.validation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.event.dto.UpdateEventUserRequest;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.EventState;
@@ -37,7 +38,6 @@ public class EventValidator {
         }
     }
 
-
     public void validateRequestsBelongToEvent(List<Request> requests, Long eventId) {
         boolean allMatch = requests.stream()
                 .allMatch(request -> request.getEvent().getId().equals(eventId));
@@ -71,16 +71,12 @@ public class EventValidator {
         }
     }
 
-    public void validateUserUpdate(Event oldEvent, User user, UpdateEventUserRequest updateDto) {
+    public void validateUserUpdateEvent(Event oldEvent, User user, UpdateEventUserRequest updateDto) {
         if (!oldEvent.getInitiator().getId().equals(user.getId())) {
             throw new ValidationException("Только пользователь создавший событие может его редактировать");
         }
         if (oldEvent.getState().equals(EventState.PUBLISHED)) {
             throw new ConflictException("Нельзя изменить опубликованное событие");
-        }
-        if (Objects.nonNull(updateDto.getEventDate()) &&
-                updateDto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new ValidationException("Событие не может начинаться ранее чем через 2 часа");
         }
     }
 

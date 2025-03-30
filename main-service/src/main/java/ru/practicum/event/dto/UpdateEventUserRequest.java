@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import ru.practicum.event.model.Location;
 import ru.practicum.event.model.StateAction;
+import ru.practicum.validation.NotBeforeHours;
 
 import java.time.LocalDateTime;
 
@@ -18,6 +19,7 @@ public class UpdateEventUserRequest {
     @Size(min = 20, max = 7000)
     String description;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @NotBeforeHours
     LocalDateTime eventDate;
     Location location;
     Boolean paid;
