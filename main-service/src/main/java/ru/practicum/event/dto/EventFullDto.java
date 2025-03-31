@@ -13,22 +13,22 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class EventFullDto {
-    String annotation;
-    CategoryDto category;
-    Integer confirmedRequests;
+    private String annotation;
+    private CategoryDto category;
+    private Integer confirmedRequests;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    LocalDateTime createdOn;
-    String description;
+    private LocalDateTime createdOn;
+    private String description;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    LocalDateTime eventDate;
-    Long id;
-    UserDto initiator;
-    Location location;
-    Boolean paid;
-    Integer participantLimit;
-    LocalDateTime publishedOn;
-    Boolean requestModeration;
-    EventState state;
-    String title;
-    Long views;
+    private LocalDateTime eventDate;
+    private Long id;
+    private UserDto initiator;
+    private Location location;
+    private Boolean paid;
+    private Integer participantLimit;
+    private LocalDateTime publishedOn;
+    private Boolean requestModeration;
+    private EventState state;
+    private String title;
+    private Long views;
 }

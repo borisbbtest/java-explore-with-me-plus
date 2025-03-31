@@ -42,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -171,30 +170,13 @@ public class EventServiceImpl implements EventService {
 
 
     @Override
-    @Transactional
     public EventFullDto updateEventByAdmin(Long eventId,
                                            UpdateEventAdminRequest updateEventAdminRequest) {
         Event oldEvent = getEventById(eventId);
         eventValidator.validateAdminPublishedEventDate(updateEventAdminRequest.getEventDate(), oldEvent);
         eventValidator.validateAdminEventDate(oldEvent);
         eventValidator.validateAdminEventUpdateState(oldEvent.getState());
-
-        Stream.<Runnable>of(
-                () -> Optional.ofNullable(updateEventAdminRequest.getAnnotation()).ifPresent(oldEvent::setAnnotation),
-                () -> Optional.ofNullable(updateEventAdminRequest.getDescription()).ifPresent(oldEvent::setDescription),
-                () -> Optional.ofNullable(updateEventAdminRequest.getEventDate()).ifPresent(oldEvent::setEventDate),
-                () -> Optional.ofNullable(updateEventAdminRequest.getLocation()).ifPresent(oldEvent::setLocation),
-                () -> Optional.ofNullable(updateEventAdminRequest.getPaid()).ifPresent(oldEvent::setPaid),
-                () -> Optional.ofNullable(updateEventAdminRequest.getParticipantLimit()).ifPresent(oldEvent::setParticipantLimit),
-                () -> Optional.ofNullable(updateEventAdminRequest.getRequestModeration()).ifPresent(oldEvent::setRequestModeration),
-                () -> Optional.ofNullable(updateEventAdminRequest.getTitle()).ifPresent(oldEvent::setTitle)
-        ).forEach(Runnable::run);
-        Optional.ofNullable(updateEventAdminRequest.getCategory())
-                .map(categoryId -> categoryRepository.findById(categoryId)
-                        .orElseThrow(() -> new ValidationException("Не найдена категория с ID: " + categoryId)))
-                .ifPresent(oldEvent::setCategory);
-        Optional.ofNullable(updateEventAdminRequest.getStateAction())
-                .ifPresent(action -> handleStateUpdateEventAdminRequest(action, oldEvent));
+        applyAdminUpdates(oldEvent, updateEventAdminRequest);
         Event event = eventRepository.save(oldEvent);
         log.info("Событие успешно обновлено администратором");
         return EventMapper.toFullDto(event);
@@ -314,6 +296,24 @@ public class EventServiceImpl implements EventService {
                     .orElseGet(() -> locationRepository.save(requestLocation));
         }
         return mayBeExistingLocation;
+    }
+
+    private void applyAdminUpdates(Event event, UpdateEventAdminRequest update) {
+        Optional.ofNullable(update.getAnnotation()).ifPresent(event::setAnnotation);
+        Optional.ofNullable(update.getDescription()).ifPresent(event::setDescription);
+        Optional.ofNullable(update.getEventDate()).ifPresent(event::setEventDate);
+        Optional.ofNullable(update.getLocation()).ifPresent(event::setLocation);
+        Optional.ofNullable(update.getPaid()).ifPresent(event::setPaid);
+        Optional.ofNullable(update.getParticipantLimit()).ifPresent(event::setParticipantLimit);
+        Optional.ofNullable(update.getRequestModeration()).ifPresent(event::setRequestModeration);
+        Optional.ofNullable(update.getTitle()).ifPresent(event::setTitle);
+
+        Optional.ofNullable(update.getCategory())
+                .map(categoryId -> categoryRepository.findById(categoryId)
+                        .orElseThrow(() -> new ValidationException("Не найдена категория с ID: " + categoryId)))
+                .ifPresent(event::setCategory);
+        Optional.ofNullable(update.getStateAction())
+                .ifPresent(action -> handleStateUpdateEventAdminRequest(action, event));
     }
 
     private void applyUserUpdates(Event event, UpdateEventUserRequest update) {

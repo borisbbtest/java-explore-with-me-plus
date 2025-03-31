@@ -11,10 +11,10 @@ import java.util.List;
 @Data
 @Builder
 public class SearchAdminEventsParamDto {
-    List<Long> users;
-    List<EventState> eventStates;
-    List<Long> categoriesIds;
-    LocalDateTime rangeStart;
-    LocalDateTime rangeEnd;
-    PageRequest pageRequest;
+    private List<Long> users;
+    private List<EventState> eventStates;
+    private List<Long> categoriesIds;
+    private LocalDateTime rangeStart;
+    private LocalDateTime rangeEnd;
+    private PageRequest pageRequest;
 }
