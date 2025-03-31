@@ -19,50 +19,50 @@ public class Event {
     @Column(name = "id")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
     @Column(name = "title")
-    String title;
+    private String title;
 
     @Column(name = "annotation", columnDefinition = "TEXT")
-    String annotation;
+    private String annotation;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
-    Category category;
+    private Category category;
 
     @Column(name = "paid")
-    Boolean paid;
+    private Boolean paid;
 
     @Column(name = "event_date")
-    LocalDateTime eventDate;
+    private LocalDateTime eventDate;
 
     @ManyToOne
     @JoinColumn(name = "initiator_id")
-    User initiator;
+    private User initiator;
 
     @Column(name = "description", columnDefinition = "TEXT")
-    String description;
+    private String description;
 
     @Column(name = "participant_limit")
-    Integer participantLimit;
+    private Integer participantLimit;
 
     @Enumerated(EnumType.STRING)
-    EventState state;
+    private EventState state;
 
     @Column(name = "created_on")
-    LocalDateTime createdOn;
+    private LocalDateTime createdOn;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "location_id")
-    Location location;
+    private Location location;
 
     @Column(name = "request_moderation")
-    Boolean requestModeration;
+    private Boolean requestModeration;
 
     @Column(name = "published_on")
-    LocalDateTime publishedOn;
+    private LocalDateTime publishedOn;
 
     @Column(name = "confirmed_requests")
-    Integer confirmedRequests;
+    private Integer confirmedRequests;
 }

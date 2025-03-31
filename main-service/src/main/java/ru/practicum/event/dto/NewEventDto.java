@@ -14,27 +14,27 @@ import java.time.LocalDateTime;
 public class NewEventDto {
     @NotBlank
     @Size(min = 20, max = 2000)
-    String annotation;
+    private String annotation;
     @NotNull
-    Long category;
+    private Long category;
     @NotBlank
     @Size(min = 20, max = 7000)
-    String description;
+    private String description;
     @NotNull
     @Future
     @NotBeforeHours
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    LocalDateTime eventDate;
+    private LocalDateTime eventDate;
     @NotNull
-    Location location;
+    private Location location;
     @JsonSetter(nulls = Nulls.SKIP)
-    Boolean paid = false;
+    private Boolean paid = false;
     @PositiveOrZero
     @JsonSetter(nulls = Nulls.SKIP)
-    Integer participantLimit = 0;
+    private Integer participantLimit = 0;
     @JsonSetter(nulls = Nulls.SKIP)
-    Boolean requestModeration = true;
+    private Boolean requestModeration = true;
     @NotBlank
     @Size(min = 3, max = 120)
-    String title;
+    private String title;
 }

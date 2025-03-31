@@ -38,6 +38,8 @@ public class PublicEventController {
     private static final String DEFAULT_TEXT = "";
     private static final int DEFAULT_PAGE_SIZE = 10;
     private static final int DEFAULT_PAGE_START = 0;
+    private static final int START_SEARCH_DATE_PERIOD = 100;
+    private static final int END_SEARCH_DATE_PERIOD = 300;
     private final EventService eventService;
     private final StatClient statClient;
     DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(DATE_TIME_PATTERN);
@@ -110,8 +112,8 @@ public class PublicEventController {
         EventFullDto eventFullDto = eventService.getPublicEvent(eventId, request);
 
         log.info("Запрос статистики для события с id {}", eventId);
-        String start = LocalDateTime.now().minusYears(100).format(dateTimeFormatter);
-        String end = LocalDateTime.now().plusYears(300).format(dateTimeFormatter);
+        String start = LocalDateTime.now().minusYears(START_SEARCH_DATE_PERIOD).format(dateTimeFormatter);
+        String end = LocalDateTime.now().plusYears(END_SEARCH_DATE_PERIOD).format(dateTimeFormatter);
         List<ViewStatsDto> viewStatsDtos = getStatisticsEventViews(start,
                 end, List.of(request.getRequestURI()), true);
         if (viewStatsDtos.size() != 0) {

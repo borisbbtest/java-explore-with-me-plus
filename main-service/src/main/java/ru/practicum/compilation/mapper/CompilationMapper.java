@@ -3,10 +3,10 @@ package ru.practicum.compilation.mapper;
 import lombok.experimental.UtilityClass;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.dto.NewCompilationDto;
+import ru.practicum.compilation.model.Compilation;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
-import ru.practicum.compilation.model.Compilation;
 
 import java.util.List;
 import java.util.Set;
