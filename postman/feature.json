@@ -1,0 +1,63 @@
+{
+  "info": {
+    "name": "Explore With Me - Public Compilation Controller",
+    "_postman_id": "e6aee6e2-b159-4d96-b917-8e6f55547b33",
+    "description": "Postman коллекция для тестирования эндпоинтов PublicCompilationController",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get compilations (optional pinned, from, size)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:9090/compilations?pinned=false&from=0&size=10",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9090",
+          "path": [
+            "compilations"
+          ],
+          "query": [
+            {
+              "key": "pinned",
+              "value": "false"
+            },
+            {
+              "key": "from",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get compilation by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:9090/compilations/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9090",
+          "path": [
+            "compilations",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
