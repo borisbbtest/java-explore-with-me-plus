@@ -20,8 +20,6 @@ import ru.practicum.exceptions.NotFoundException;
 import ru.practicum.exceptions.ValidationException;
 import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
-
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -44,9 +42,6 @@ public class CommentServiceImpl implements CommentService {
         User user = getUserById(userId);
         Event event = getEventById(eventId);
         List<Comment> comments = commentRepository.findByAuthorAndEvent(user, event, pageRequest);
-        if (comments.isEmpty()) {
-            return new ArrayList<>();
-        }
         return comments.stream().map(CommentMapper::toCommentResponseDto).toList();
     }
 
@@ -114,10 +109,6 @@ public class CommentServiceImpl implements CommentService {
                                                 PageRequest pageRequest) {
         Event event = getEventById(eventId);
         List<Comment> comments = commentRepository.findByEvent(event, pageRequest);
-        if (comments.isEmpty()) {
-            log.info("У события с id = {} еще нет комментариев", eventId);
-            return new ArrayList<>();
-        }
         log.info("Получены все комментарии события с id = {}", eventId);
         return comments.stream().map(CommentMapper::toCommentResponseDto).toList();
     }
